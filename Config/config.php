@@ -11,7 +11,7 @@ return [
      *
      * @see https://github.com/netcore/module-category#category-groups
      */
-    'used_category_group'   => [
+    'used_category_group' => [
         'key'                  => 'forum',
         'title'                => 'Forum categories',
         'has_icons'            => true,
