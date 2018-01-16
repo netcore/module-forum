@@ -1,0 +1,34 @@
+{
+    "name": "netcore/module-forum",
+    "description": "Netcore CMS Forum module",
+    "homepage": "http://netcore.lv",
+    "type": "module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Viktors Ņikiforovs",
+            "email": "viktors.nikiforovs@netcore.lv"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Forum\\Providers\\ForumServiceProvider"
+            ],
+            "aliases": {
+                
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Forum\\": ""
+        }
+    },
+    "require": {
+        "php": ">=7.1",
+        "cviebrock/eloquent-sluggable": "^4.3",
+        "netcore/module-category": "^1.0"
+    },
+    "minimum-stability": "dev"
+}
