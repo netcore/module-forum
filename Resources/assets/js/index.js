@@ -2,6 +2,7 @@
 
 import 'blockui';
 import axios from 'axios';
+import 'select2';
 
 $(function () {
     let table = $('#threads-datatable');
@@ -58,4 +59,10 @@ $(function () {
             });
         });
     }
+
+    // Category select
+    $('.select2-categories').select2().on('change', (e) => {
+        $(e.target).closest('form').submit();
+    });
+
 });

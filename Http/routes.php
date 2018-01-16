@@ -29,4 +29,9 @@ Route::group([
         'uses' => 'ForumThreadsController@toggleThreadState',
     ]);
 
+    Route::get('management/threads/{thread}/edit', [
+        'as'   => 'management.threads.edit',
+        'uses' => 'ForumThreadsController@edit',
+    ]);
+
 });

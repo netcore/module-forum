@@ -9,6 +9,17 @@ use Modules\Forum\Models\Thread;
 class ForumThreadsController extends Controller
 {
     /**
+     * Display thread management page.
+     *
+     * @param \Modules\Forum\Models\Thread $thread
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function edit(Thread $thread)
+    {
+        return view('forum::threads.edit', compact('thread'));
+    }
+
+    /**
      * Toggle thread attribute.
      *
      * @param \Modules\Forum\Models\Thread $thread

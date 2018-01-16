@@ -2,9 +2,9 @@
 
 return [
     /**
-     * Allow to create topics in category leaves only.
+     * Allow to create threads in category leaves only.
      */
-    'topics_in_leaves_only' => true,
+    'threads_in_leaves_only' => true,
 
     /**
      * Category group config used by forum module.
