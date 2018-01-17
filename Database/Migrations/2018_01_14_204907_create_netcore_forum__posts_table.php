@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Kalnoy\Nestedset\NestedSet;
 
 class CreateNetcoreForumPostsTable extends Migration
 {
@@ -17,15 +18,17 @@ class CreateNetcoreForumPostsTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('thread_id');
             $table->unsignedInteger('user_id')->nullable();
-            $table->unsignedInteger('post_id')->nullable();
+            $table->boolean('is_first')->default(false);
+
+            /** @see https://github.com/lazychaser/laravel-nestedset#the-schema */
+            NestedSet::columns($table);
+
+            $table->text('content');
             $table->timestamps();
             $table->softDeletes();
 
             // Thread foreign.
             $table->foreign('thread_id')->references('id')->on('netcore_forum__threads')->onDelete('CASCADE');
-
-            // Post foreign.
-            $table->foreign('post_id')->references('id')->on('netcore_forum__posts')->onDelete('CASCADE');
 
             // User foreign.
             $databaseTable = config('netcore.module-admin.user.table', 'users');

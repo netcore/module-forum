@@ -5,11 +5,18 @@ namespace Modules\Forum\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Kalnoy\Nestedset\NodeTrait;
 use Modules\Forum\Traits\Models\HasAuthor;
+use Thunder\Shortcode\HandlerContainer\HandlerContainer;
+use Thunder\Shortcode\Parser\RegularParser;
+use Thunder\Shortcode\Processor\Processor;
 
 class Post extends Model
 {
-    use SoftDeletes, HasAuthor;
+    use
+        SoftDeletes,
+        HasAuthor,
+        NodeTrait;
 
     /**
      * The table associated with the model.
@@ -26,8 +33,11 @@ class Post extends Model
     protected $fillable = [
         'thread_id',
         'user_id',
-        'post_id',
         'content',
+    ];
+
+    public $appends = [
+        'parsed_content',
     ];
 
     /** -------------------- Relations -------------------- */
@@ -42,13 +52,51 @@ class Post extends Model
         return $this->belongsTo(Thread::class)->withTrashed();
     }
 
+    /** -------------------- Accessors -------------------- */
+
     /**
-     * Post belongs to post (reply).
+     * Get the parsed content of post (BB codes -> HTML).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return string
      */
-    public function parent(): BelongsTo
+    public function getParsedContentAttribute(): string
     {
-        return $this->belongsTo(Post::class);
+        return self::parseBBCodes($this->content);
+    }
+
+    /**
+     * Parse BB codes to HTML.
+     *
+     * @param string $content
+     * @return string
+     */
+    public static function parseBBCodes(string $content): string
+    {
+        static $processor;
+
+        if (!$processor) {
+            $handlers = new HandlerContainer;
+            $processor = new Processor(new RegularParser, $handlers);
+        }
+
+        return (string)$processor->process($content);
+    }
+
+    /** -------------------- Helpers -------------------- */
+
+    /**
+     * Mark current post as first post.
+     *
+     * @return bool
+     */
+    public function markAsFirst(): bool
+    {
+        $this->thread->posts()->getQuery()->update([
+            'is_first' => false,
+        ]);
+
+        $this->is_first = true;
+
+        return $this->save();
     }
 }

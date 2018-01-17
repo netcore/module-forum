@@ -16,7 +16,6 @@
                 "Modules\\Forum\\Providers\\ForumServiceProvider"
             ],
             "aliases": {
-                
             }
         }
     },
@@ -28,7 +27,9 @@
     "require": {
         "php": ">=7.1",
         "cviebrock/eloquent-sluggable": "^4.3",
-        "netcore/module-category": "^1.0"
+        "netcore/module-category": "^1.0",
+        "thunderer/shortcode": "^0.6",
+        "kalnoy/nestedset": "^4.2"
     },
     "minimum-stability": "dev"
 }

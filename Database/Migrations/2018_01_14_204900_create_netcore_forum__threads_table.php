@@ -22,6 +22,7 @@ class CreateNetcoreForumThreadsTable extends Migration
             $table->unsignedInteger('replies')->default(0);
             $table->unsignedInteger('views')->default(0);
             $table->string('title');
+            $table->string('slug')->unique()->index();
             $table->timestamps();
             $table->softDeletes();
 

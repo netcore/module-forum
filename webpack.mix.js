@@ -9,13 +9,9 @@ const config = {
 };
 
 // Configure mix.
-mix.js(
-    path.join(config.res, 'js/index.js'), path.join(config.out, 'admin/js/index.js')
-);
-
-mix.sass(
-    path.join(config.res, 'sass/main.scss'), path.join(config.out, 'admin/css/main.css')
-);
+mix.js(path.join(config.res, 'js/index.js'), path.join(config.out, 'admin/js/index.js'));
+mix.js(path.join(config.res, 'js/thread-edit.js'), path.join(config.out, 'admin/js/thread-edit.js'));
+mix.sass(path.join(config.res, 'sass/main.scss'), path.join(config.out, 'admin/css/main.css'));
 
 mix.disableNotifications();
 

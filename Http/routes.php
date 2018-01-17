@@ -34,4 +34,9 @@ Route::group([
         'uses' => 'ForumThreadsController@edit',
     ]);
 
+    Route::put('management/threads/{thread}/posts/{post}', [
+        'as'   => 'management.posts.update',
+        'uses' => 'ForumPostsController@update',
+    ]);
+
 });
