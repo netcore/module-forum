@@ -1,93 +1,181 @@
 <template>
-    <div class="editor-area">
-        <button type="button" class="btn btn-xs btn-info m-b-1" @click="isEditing = true" v-show="!isEditing">
-            <i class="fa fa-edit"></i> Edit
-        </button>
-
-        <div v-show="isEditing">
-            <button type="button" class="btn btn-xs btn-danger m-b-1" @click="isEditing = false">
-                <i class="fa fa-times"></i> Cancel
-            </button>
-
-            <button type="button" class="btn btn-xs btn-success m-b-1" @click="savePost()">
-                <i class="fa fa-save"></i> Save
-            </button>
-
-            <textarea class="bb-editor" :id="'post-editor-' + _uid" v-text="postData.content"></textarea>
+    <div class="post flex-container">
+        <div class="text-center flex-row flex-author-row">
+            <span class="badge badge-default" v-text="post.author.name"></span>
+            <p class="text-danger" v-if="post.author.blocked_in">
+                User is blocked in <br><b v-text="post.author.blocked_in"></b>
+            </p>
+            <img :src="post.author.avatar" :alt="post.author.name" class="center-block img-thumbnail">
+            <div class="actions">
+                <button type="button" class="btn btn-xs btn-default" @click="$parent.blockOrUnblockUser(post)">
+                    <i class="fa fa-lock"></i> Block / <i class="fa fa-unlock"></i> Unblock
+                </button>
+            </div>
         </div>
 
-        <div class="compiled-text" v-show="! isEditing" v-html="postData.parsed_content"></div>
+        <div class="flex-row flex-post-row">
+            <div class="panel panel-default editor-area">
+                <div class="panel-heading">
+                    <span class="panel-title font-size-11">#{{ postData.id }}</span>
+                    <div class="panel-heading-controls">
+                        <button type="button" class="btn btn-xs btn-info" @click="isEditing = true" v-show="!isEditing">
+                            <i class="fa fa-edit"></i> Edit
+                        </button>
+
+                        <button type="button" class="btn btn-xs btn-danger" @click="deleteOrRecover()"
+                                v-if="!isEditing && !postData.deleted_at">
+                            <i class="fa fa-times-circle"></i> Delete
+                        </button>
+
+                        <button type="button" class="btn btn-xs btn-success" @click="deleteOrRecover()"
+                                v-if="!isEditing && postData.deleted_at">
+                            <i class="fa fa-times-circle"></i> Restore
+                        </button>
+
+                        <div v-show="isEditing">
+                            <button type="button" class="btn btn-xs btn-danger" @click="isEditing = false">
+                                <i class="fa fa-times"></i> Cancel
+                            </button>
+
+                            <button type="button" class="btn btn-xs btn-success" @click="savePost()">
+                                <i class="fa fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="editor-wrapper" v-show="isEditing">
+                        <textarea class="bb-editor" :id="'post-editor-' + _uid" v-text="postData.content"></textarea>
+                    </div>
+                    <div class="compiled-text" v-show="!isEditing" v-html="parsedContent"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </template>
 <script>
-    import 'blockui';
     import axios from 'axios';
 
     export default {
         props: {
             post: {
-                type: Object
-            },
-            update: String
+                type: Object,
+                default: {}
+            }
         },
+
         data() {
             return {
                 isEditing: false,
-                editorSelector: null,
+                editorInstance: null,
                 postData: {},
+                parsedContent: ''
             };
         },
+
         created() {
             this.postData = this.post;
         },
+
         mounted() {
-            this.editorSelector = document.getElementById('post-editor-' + this._uid);
+            sceditor.create(document.getElementById('post-editor-' + this._uid), {
+                format: 'bbcode',
+                emoticonsRoot: '/assets/forum/sceditor/',
+                style: '/assets/forum/sceditor/minified/themes/content/default.min.css',
+                height: 200,
+                width: '100%'
+            });
+
+            this.editorInstance = sceditor.instance(document.getElementById('post-editor-' + this._uid));
+            this.editorInstance.bind('keypress blur focus valuechange', () => {
+                this.postData.content = this.editorInstance.getWysiwygEditorValue(true);
+            });
+
+            this.parsedContent = this.editorInstance.getWysiwygEditorValue(false);
         },
-        watch: {
-            isEditing(value) {
-                if (value && !sceditor.instance(this.editorSelector)) {
-                    setTimeout(() => {
-                        sceditor.create(this.editorSelector, {
-                            format: 'bbcode',
-                            emoticonsRoot: '/assets/forum/sceditor/',
-                            height: 200,
-                            width: '100%'
-                        });
-                    });
-                } else {
-                    sceditor.instance(this.editorSelector).destroy();
-                }
-            }
-        },
+
         methods: {
             savePost() {
-                $(this.$el).block({
-                    message: 'Saving post..',
-                    css: {
-                        padding: '15px',
-                        border: 'none',
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        color: '#fff'
-                    }
-                });
-
-                let content = sceditor.instance(this.editorSelector).val();
+                this.$parent.setLoadingState();
 
                 axios
-                    .put(this.update, { content })
+                    .put(this.postData.admin_routes.update, this.postData)
                     .then(({data: post}) => {
                         this.postData = post;
                         this.isEditing = false;
+
+                        this.parsedContent = this.editorInstance.getWysiwygEditorValue(false);
                     })
-                    .catch(() => {
-                        $.growl.error({
-                            message: 'Unable to save post, server error!'
-                        });
+                    .catch(this.$parent.showBackendError)
+                    .then(this.$parent.removeLoadingState);
+            },
+
+            deleteOrRecover() {
+                if (!confirm('Are you sure?')) {
+                    return;
+                }
+
+                this.$parent.setLoadingState();
+
+                axios
+                    .delete(this.postData.admin_routes.destroy)
+                    .then(({data: post}) => {
+                        this.postData = post;
                     })
-                    .then(() => {
-                        $(this.$el).unblock();
-                    });
+                    .catch(this.$parent.showBackendError)
+                    .then(this.$parent.removeLoadingState);
             }
         }
     };
 </script>
+
+<style lang="scss">
+    .flex-container {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #ccc;
+
+        .flex-author-row {
+            margin-bottom: 15px;
+
+            img {
+                margin-bottom: 15px;
+            }
+
+            span.badge {
+                margin-bottom: 15px;
+                display: inline-block;
+            }
+        }
+
+        .flex-post-row {
+            .panel {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        @media screen and (min-width: 800px) {
+            display: flex;
+
+            .flex-row {
+                flex: 1;
+            }
+
+            .flex-author-row {
+                flex-grow: 1;
+                flex-basis: auto;
+                max-width: 200px;
+
+                img {
+                    max-width: 200px;
+                }
+            }
+
+            .flex-post-row {
+                padding-left: 15px;
+            }
+        }
+    }
+</style>

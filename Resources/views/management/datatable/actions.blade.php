@@ -20,7 +20,7 @@
     </ul>
 </div>
 
-<a href="{{ route('forum::admin.management.threads.edit', $thread) }}" class="btn btn-xs btn-warning">
+<a href="{{ route('forum::admin.management.threads.edit', $thread) }}" class="btn btn-xs btn-primary">
     <i class="fa fa-edit"></i> Edit
 </a>
 

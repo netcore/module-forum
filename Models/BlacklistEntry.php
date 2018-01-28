@@ -2,6 +2,8 @@
 
 namespace Modules\Forum\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Category\Models\Category;
@@ -69,6 +71,66 @@ class BlacklistEntry extends Model
         return $this->belongsTo(Category::class);
     }
 
+    /** -------------------- Accessors -------------------- */
+
+    /**
+     * Get the level of blacklist entry.
+     *
+     * @return string
+     */
+    public function getLevelAttribute(): string
+    {
+        if (!$this->thread_id && !$this->category_id) {
+            return 'forum';
+        }
+
+        return $this->category_id ? 'category' : 'thread';
+    }
+
+    /**
+     * Get the description of blacklist entry.
+     *
+     * @return string
+     */
+    public function getDescriptionAttribute(): string
+    {
+        if ($this->level == 'forum') {
+            return 'Entire forum';
+        }
+
+        if ($this->level == 'category') {
+            return 'Category :: ' . $this->category->getChainedNameAttribute();
+        }
+
+        return 'Thread :: ' . $this->thread->title;
+    }
+
+    /** -------------------- Query scopes -------------------- */
+
+    /**
+     * Scope only active entries.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive(Builder $builder): Builder
+    {
+        return $builder->whereNull('expires_at')->orWhere(function (Builder $subQuery) {
+            return $subQuery->whereNotNull('expires_at')->where('expires_at', '>', Carbon::now());
+        });
+    }
+
+    /**
+     * Scope only expired entries.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExpired(Builder $builder): Builder
+    {
+        return $builder->whereNotNull('expires_at')->where('expires_at', '<=', Carbon::now());
+    }
+
     /** -------------------- Helpers -------------------- */
 
     /**
@@ -79,5 +141,15 @@ class BlacklistEntry extends Model
     public function isPermanent(): bool
     {
         return $this->expires_at === null;
+    }
+
+    /**
+     * Determine if blacklist entry is expired.
+     *
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at && ($this->expires_at < Carbon::now());
     }
 }

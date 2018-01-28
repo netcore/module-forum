@@ -4,6 +4,7 @@ namespace Modules\Forum\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Modules\Forum\Models\Post;
 use Modules\Forum\Models\Thread;
 
 class ForumServiceProvider extends ServiceProvider
@@ -98,8 +99,12 @@ class ForumServiceProvider extends ServiceProvider
      */
     public function registerRouteBindings(): void
     {
-        $this->app['router']->bind('thread', function ($id) {
+        $this->app['router']->bind('deletedThread', function ($id) {
             return Thread::withTrashed()->findOrFail($id);
+        });
+
+        $this->app['router']->bind('deletedPost', function ($id) {
+            return Post::withTrashed()->findOrFail($id);
         });
     }
 

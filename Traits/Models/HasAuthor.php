@@ -15,20 +15,4 @@ trait HasAuthor
     {
         return $this->belongsTo(config('netcore.module-forum.user.model'), 'user_id');
     }
-
-    /**
-     * Get the author name.
-     *
-     * @return null|string
-     */
-    public function getAuthorNameAttribute(): ?string
-    {
-        $attribute = config('netcore.module-forum.user.name_accessor');
-
-        if ($this->user) {
-            return $this->user->$attribute;
-        }
-
-        return null;
-    }
 }

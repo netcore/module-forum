@@ -24,19 +24,54 @@ Route::group([
         'uses' => 'ForumManagementController@paginate',
     ]);
 
-    Route::post('management/threads/{thread}/toggle-state', [
+    Route::post('management/threads/{deletedThread}/toggle-state', [
         'as'   => 'management.threads.toggle-state',
         'uses' => 'ForumThreadsController@toggleThreadState',
     ]);
 
-    Route::get('management/threads/{thread}/edit', [
+    Route::post('management/threads/{deletedThread}/xeditable', [
+        'as'   => 'management.threads.x-editable',
+        'uses' => 'ForumThreadsController@saveEditableData',
+    ]);
+
+    Route::get('management/threads/{deletedThread}/edit', [
         'as'   => 'management.threads.edit',
         'uses' => 'ForumThreadsController@edit',
     ]);
 
-    Route::put('management/threads/{thread}/posts/{post}', [
+    Route::get('management/threads/{deletedThread}/posts', [
+        'as'   => 'management.threads.paginate',
+        'uses' => 'ForumPostsController@paginate',
+    ]);
+
+    Route::put('management/threads/{deletedThread}/posts/{deletedPost}', [
         'as'   => 'management.posts.update',
         'uses' => 'ForumPostsController@update',
     ]);
 
+    Route::delete('management/threads/{deletedThread}/posts/{deletedPost}', [
+        'as'   => 'management.posts.destroy',
+        'uses' => 'ForumPostsController@destroy',
+    ]);
+
+    // Blacklist routes
+    Route::get('blacklist/get-entries', [
+        'as'   => 'blacklists.fetch-entries',
+        'uses' => 'ForumBlacklistsController@fetchEntries',
+    ]);
+
+    Route::get('blacklist/get-categories', [
+        'as'   => 'blacklists.fetch-categories',
+        'uses' => 'ForumBlacklistsController@fetchCategories',
+    ]);
+
+    Route::post('blacklist/create', [
+        'as'   => 'blacklists.store',
+        'uses' => 'ForumBlacklistsController@store',
+    ]);
+
+    Route::delete('blacklist/{blacklistEntry}', [
+        'as'   => 'blacklists.destroy',
+        'uses' => 'ForumBlacklistsController@destroy',
+    ]);
 });

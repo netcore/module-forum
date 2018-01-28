@@ -10,6 +10,7 @@ use Modules\Forum\Traits\Models\HasAuthor;
 use Thunder\Shortcode\HandlerContainer\HandlerContainer;
 use Thunder\Shortcode\Parser\RegularParser;
 use Thunder\Shortcode\Processor\Processor;
+use Thunder\Shortcode\Shortcode\ShortcodeInterface;
 
 class Post extends Model
 {
@@ -36,10 +37,6 @@ class Post extends Model
         'content',
     ];
 
-    public $appends = [
-        'parsed_content',
-    ];
-
     /** -------------------- Relations -------------------- */
 
     /**
@@ -50,53 +47,5 @@ class Post extends Model
     public function thread(): BelongsTo
     {
         return $this->belongsTo(Thread::class)->withTrashed();
-    }
-
-    /** -------------------- Accessors -------------------- */
-
-    /**
-     * Get the parsed content of post (BB codes -> HTML).
-     *
-     * @return string
-     */
-    public function getParsedContentAttribute(): string
-    {
-        return self::parseBBCodes($this->content);
-    }
-
-    /**
-     * Parse BB codes to HTML.
-     *
-     * @param string $content
-     * @return string
-     */
-    public static function parseBBCodes(string $content): string
-    {
-        static $processor;
-
-        if (!$processor) {
-            $handlers = new HandlerContainer;
-            $processor = new Processor(new RegularParser, $handlers);
-        }
-
-        return (string)$processor->process($content);
-    }
-
-    /** -------------------- Helpers -------------------- */
-
-    /**
-     * Mark current post as first post.
-     *
-     * @return bool
-     */
-    public function markAsFirst(): bool
-    {
-        $this->thread->posts()->getQuery()->update([
-            'is_first' => false,
-        ]);
-
-        $this->is_first = true;
-
-        return $this->save();
     }
 }

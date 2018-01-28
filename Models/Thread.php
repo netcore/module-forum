@@ -11,14 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Category\Models\Category;
 use Modules\Forum\Traits\Models\HasAuthor;
-use Modules\Forum\Traits\Models\PermissionHelpers;
-use Modules\Forum\Traits\Models\ThreadObservable;
 
 class Thread extends Model
 {
     use SoftDeletes,
         HasAuthor,
-        PermissionHelpers,
         Sluggable,
         SluggableScopeHelpers;
 
@@ -48,7 +45,7 @@ class Thread extends Model
      * @var array
      */
     protected $with = [
-        'firstPost'
+        'firstPost',
     ];
 
     /**
@@ -85,7 +82,7 @@ class Thread extends Model
      */
     public function posts(): HasMany
     {
-        return $this->hasMany(Post::class)->whereIsFirst(false);
+        return $this->hasMany(Post::class);
     }
 
     /**
