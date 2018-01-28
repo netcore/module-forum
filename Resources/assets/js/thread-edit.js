@@ -198,6 +198,11 @@ new Vue({
                 });
         },
 
+        /**
+         * Add blacklist entry.
+         *
+         * @param event
+         */
         addBlacklistEntry(event) {
             let button = $(event.target);
             button.data('loading-text', $('<i>').addClass('fa fa-spin fa-spinner'));

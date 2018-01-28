@@ -2,10 +2,12 @@
     <div class="post flex-container">
         <div class="text-center flex-row flex-author-row">
             <span class="badge badge-default" v-text="post.author.name"></span>
-            <p class="text-danger" v-if="post.author.blocked_in">
-                User is blocked in <br><b v-text="post.author.blocked_in"></b>
-            </p>
-            <img :src="post.author.avatar" :alt="post.author.name" class="center-block img-thumbnail">
+            <img :src="post.author.avatar" :alt="post.author.name" class="center-block img-thumbnail m-b-1">
+
+            <span class="label label-danger m-b-1" v-if="post.author.blacklist_count">
+                {{ post.author.blacklist_count }} active blacklist {{ post.author.blacklist_count | entryFilter }}
+            </span>
+
             <div class="actions">
                 <button type="button" class="btn btn-xs btn-default" @click="$parent.blockOrUnblockUser(post)">
                     <i class="fa fa-lock"></i> Block / <i class="fa fa-unlock"></i> Unblock
@@ -59,6 +61,9 @@
     import axios from 'axios';
 
     export default {
+        /**
+         * Component props.
+         */
         props: {
             post: {
                 type: Object,
@@ -66,6 +71,9 @@
             }
         },
 
+        /**
+         * Component data.
+         */
         data() {
             return {
                 isEditing: false,
@@ -75,10 +83,16 @@
             };
         },
 
+        /**
+         * Created event.
+         */
         created() {
             this.postData = this.post;
         },
 
+        /**
+         * Mounted event.
+         */
         mounted() {
             sceditor.create(document.getElementById('post-editor-' + this._uid), {
                 format: 'bbcode',
@@ -96,7 +110,22 @@
             this.parsedContent = this.editorInstance.getWysiwygEditorValue(false);
         },
 
+        /**
+         * Component filters.
+         */
+        filters: {
+            entryFilter: function (value) {
+                return value === 1 ? 'entry' : 'entries';
+            }
+        },
+
+        /**
+         * Component methods.
+         */
         methods: {
+            /**
+             * Save post content.
+             */
             savePost() {
                 this.$parent.setLoadingState();
 
@@ -112,6 +141,9 @@
                     .then(this.$parent.removeLoadingState);
             },
 
+            /**
+             * Delete/recover post.
+             */
             deleteOrRecover() {
                 if (!confirm('Are you sure?')) {
                     return;
@@ -139,10 +171,6 @@
 
         .flex-author-row {
             margin-bottom: 15px;
-
-            img {
-                margin-bottom: 15px;
-            }
 
             span.badge {
                 margin-bottom: 15px;

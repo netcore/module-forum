@@ -18,29 +18,24 @@ class ForumPostsController extends Controller
      */
     public function paginate(Thread $deletedThread): JsonResponse
     {
-        $posts = $deletedThread->posts()->withTrashed()->paginate(10);
+        $posts = $deletedThread
+            ->posts()
+            ->withTrashed()
+            ->with(['user.forumBlacklistEntries' => function($query) {
+                return $query->active();
+            }])
+            ->paginate(10);
 
-        $posts->each(function (Post $post) {
+        $posts->each(function (Post $post) use ($deletedThread) {
             $post->admin_routes = [
-                'update'  => route('forum::admin.management.posts.update', [$post->thread, $post]),
-                'destroy' => route('forum::admin.management.posts.destroy', [$post->thread, $post]),
+                'update'  => route('forum::admin.management.posts.update', [$deletedThread, $post]),
+                'destroy' => route('forum::admin.management.posts.destroy', [$deletedThread, $post]),
             ];
 
-            // User blacklist state.
-            $blockedIn = null;
-
-            if ($post->user->forumHelpers()->isBlockedInEntireForum()) {
-                $blockedIn = 'Entire forum';
-            } elseif ($post->user->forumHelpers()->isBlockedInCategory($post->thread->category)) {
-                $blockedIn = 'Current category';
-            } elseif ($post->user->forumHelpers()->isBlockedInThread($post->thread)) {
-                $blockedIn = 'Current thread';
-            }
-
             $post->author = [
-                'name'       => $post->user->forum_name ?? 'Deleted',
-                'avatar'     => $post->user->forum_avatar ?? null,
-                'blocked_in' => $blockedIn,
+                'name'            => $post->user->forum_name ?? 'Deleted',
+                'avatar'          => $post->user->forum_avatar ?? null,
+                'blacklist_count' => $post->user->forumBlacklistEntries->count()
             ];
 
             return $post;
